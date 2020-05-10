@@ -1,99 +1,64 @@
 #
-# Copyright (c) 2006-2012 Luc HONDAREYTE
+# Copyright (c) 2018 Luc HONDAREYTE
 # All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or 
-# without modification, are permitted provided that the 
-# following conditions are met:
-# 1. Redistributions of source code must retain the above 
-#    copyright notice, this list of conditions and the 
-#    following disclaimer.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
-# CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, 
-# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# $Id: Makefile,v 1.4 2011/04/25 16:21:03 luc Exp luc $
 #
 
 include config.mk
 
-CCPATH		:=/usr/local/CrossPack-AVR/bin
-CC		:=$(CCPATH)/avr-gcc
-OBJCOPY		:=$(CCPATH)/avr-objcopy
+CC		:= avr-gcc
+OBJCOPY		:= avr-objcopy
 CFLAGS		+=-Os -D F_CPU=$(HZ)
 CFLAGS		+=-g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 
 HEADERS         += $(wildcard *.h)
 SOURCES         += $(wildcard *.c)
-ASMSRCS         += $(wildcard *.s)
-OBJECTS         += $(patsubst %.c,%.o,$(SOURCES))
-OBJECTS		+= $(patsubst %.s,%.o,$(ASMSRCS))
 ASMFLAGS	:=-Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
 ASMFLAGS	+=-I /usr/local/avr/include
 
-all: $(FIRMWARE).hex
+all: top-octave.o asm-sources asm-objs out-files hex-files
 
-coffee: all load verify wfuse mrproper
-	@echo "All is nice. Have a good day."
-
-$(FIRMWARE).hex: $(FIRMWARE).out 
+asm-sources:
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+		./genedivider.pl $$i > $$i.s ; done
+asm-objs:
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+	   $(CC) $(ASMFLAGS) -c $$i.s -o $$i.o ; done
+hex-files: 
 	@printf "Generating $(FIRMWARE).hex..."
-	@$(OBJCOPY) -R .eeprom -O ihex $(FIRMWARE).out  \
-		$(FIRMWARE).hex
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+		$(OBJCOPY) -R .eeprom -O ihex $$i.out  \
+		$$i.hex ; done
 	@echo "done."
 
-$(FIRMWARE).out: $(OBJECTS)
-	@printf "Linking    $(FIRMWARE)..."
-	@$(CC) $(CFLAGS) -o $(FIRMWARE).out \
-		-Wl,-Map,$(FIRMWARE).map $(OBJECTS)
+out-files: 
+	@printf "Linking $(FIRMWARE)..."
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+		$(CC) $(CFLAGS) -o $$i.out \
+		-Wl,-Map,$$i.map top-octave.o $$i.o  ; done
 	@echo "done."
 
-.c.o:  $(HEADERS) $(SOURCES)
+top-octave.c.o: 
 	@printf "Compiling  $<..."
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "done."
 
-.s.o: $(HEADERS) $(ASMSRCS)
-	@printf "Compiling $<..."
-	@$(CC) $(ASMFLAGS) -c $< -o $@
-	@echo "done."
-
-asm: $(FIRMWARE).out
+asm: all
 	@printf "Generating assembler source file..."
-	@$(CCPATH)/avr-objdump -D -S $(FIRMWARE).out > $(FIRMWARE).s
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+		avr-objdump -D -S $$i.out > $$i.asm ; done
 	@echo "done."
 
-bin: $(FIRMWARE).out 
+bin: all
 	@printf "Generating $(FIRMWARE).bin ..."
-	@$(OBJCOPY) -R .eeprom -O binary $(FIRMWARE).out  \
-		$(FIRMWARE).bin
+	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
+		$(OBJCOPY) -R .eeprom -O binary $$i.out  \
+		$$i.bin ; done
 	@echo "done."
-	@ls -l $(FIRMWARE).bin
 #
 # Configuration du programmateur ISP
-LOADER=/usr/local/bin/avrdude
+LOADER=avrdude
 
-ifeq ($(shell uname -s), FreeBSD)
-ISP=-c stk500v2 -P /dev/cuaU0		# Programmateur USB
-#ISP	:=-c stk200 -P /dev/ppi0	# Programmateur parallele
-endif
-
-ifeq ($(shell uname -s), Darwin)
-MODEM	:= $(shell ([ -c /dev/cu*usbmodem* ] && ls /dev/cu*usbmodem*))
-ISP	:=-c avrispmkII -P $(MODEM)
-#ISP	:=-c stk500v2 -P $(MODEM)
-endif
+ISP	:=-c usbasp 
 
 LOADER	:=$(LOADER) -p $(MCU) $(ISP)
 LOAD	:=$(LOADER) -i 5 -U flash:w:$(FIRMWARE).hex
@@ -104,7 +69,6 @@ RFUSE	:=$(LOADER) -U lfuse:r:low.txt:b -U hfuse:r:high.txt:b
 WFUSE	:=$(LOADER) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
 
 load:
-	echo $(MODEM)
 	@printf "Loading firmware..."
 	@$(LOAD) > /dev/null 2>&1
 	@echo "done."
@@ -134,7 +98,7 @@ wfuse:
 clean :
 	@printf "Cleaning source tree..."
 	@rm -f *.map *.bin *~ *.out *.gch *.o \
-		low.txt high.txt $(FIRMWARE) $(FIRMWARE).asm *hex
+		low.txt high.txt $(FIRMWARE) $(FIRMWARE).asm *hex *.s
 	@echo "done."
 
 archive: 
