@@ -1,2 +1,2 @@
-# TOP Octave divider
+## Top Octave divider
 Untested attempt to build a top octave divider.
