@@ -1,7 +1,11 @@
 #!/usr/bin/env perl -w
+#
+# Desc. : Assembly source code generator for one divider
+#
+
 use strict;
-#my @dividers = (451, 426, 402, 379, 358, 338, 319, 301, 284, 268, 253, 239);
-my $offset  = 5;
+my $offset  = 5;           # I/O cost 5 cycles in loop -> see @footer
+my $count   = 8;           # Indentation loop count
 my $divider = shift ;
 
 if ( not defined $divider ) {
@@ -20,17 +24,18 @@ loop:
 EOH
 
 my $footer = <<EOF;
-
+	
+	; Toggle output
 	subi temp, 1    ; 2 cycles
 	out PORTB, temp ; 1 cycles
 	rjmp loop       ; 2 cycles
 EOF
 
-$divider = $divider - $offset;
-my $count   = 8;
-
 print STDOUT "$header";
 
+#
+# nop generation
+$divider = $divider - $offset;
 while  ($divider) {
 	if ( $count % 8 ) {
 		print STDOUT ("nop; ");
