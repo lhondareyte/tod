@@ -7,7 +7,7 @@ include config.mk
 
 CC		:= avr-gcc
 OBJCOPY		:= avr-objcopy
-CFLAGS		+=-Os -D F_CPU=$(HZ)
+CFLAGS		+=-O0 -D F_CPU=$(HZ)
 CFLAGS		+=-g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 
 HEADERS         += $(wildcard *.h)
@@ -15,26 +15,26 @@ SOURCES         += $(wildcard *.c)
 ASMFLAGS	:=-Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
 ASMFLAGS	+=-I /usr/local/avr/include
 
+DIVIDERS        = 478 451 426 402 379 358 338 319 301 284 268 253 239
+
 all: top-octave.o asm-sources asm-objs out-files hex-files
 
 asm-sources:
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-		./genedivider.pl $$i > $$i.s ; done
+	@printf "Generating ASM files ..."
+	@$(foreach i,$(DIVIDERS),./genedivider.pl $(i) > $(i).s;)
+	@echo "done."
 asm-objs:
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-	   $(CC) $(ASMFLAGS) -c $$i.s -o $$i.o ; done
+	@printf "Compiling dividers ..."
+	@$(foreach i,$(DIVIDERS),$(CC) $(ASMFLAGS) -c $(i).s -o $(i).o;)
+	@echo "done."
 hex-files: 
 	@printf "Generating $(FIRMWARE).hex..."
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-		$(OBJCOPY) -R .eeprom -O ihex $$i.out  \
-		$$i.hex ; done
+	@$(foreach i,$(DIVIDERS),$(OBJCOPY) -R .eeprom -O ihex $(i).out $(i).hex;) 
 	@echo "done."
 
 out-files: 
 	@printf "Linking $(FIRMWARE)..."
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-		$(CC) $(CFLAGS) -o $$i.out \
-		-Wl,-Map,$$i.map top-octave.o $$i.o  ; done
+	@$(foreach i,$(DIVIDERS),$(CC) $(CFLAGS) -o $(i).out -Wl,-Map,$(i).map top-octave.o $(i).o;)
 	@echo "done."
 
 top-octave.c.o: 
@@ -44,22 +44,17 @@ top-octave.c.o:
 
 asm: all
 	@printf "Generating assembler source file..."
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-		avr-objdump -D -S $$i.out > $$i.asm ; done
+	@$(foreach i,$(DIVIDERS), avr-objdump -D -S $(i).out > $(i).asm;)
 	@echo "done."
 
 bin: all
 	@printf "Generating $(FIRMWARE).bin ..."
-	@for i in 451 426 402 379 358 338 319 301 284 268 253 239; do  \
-		$(OBJCOPY) -R .eeprom -O binary $$i.out  \
-		$$i.bin ; done
+	@$(foreach i,$(DIVIDERS), $(OBJCOPY) -R .eeprom -O binary $(i).out $(i).bin;)
 	@echo "done."
 #
 # Configuration du programmateur ISP
-LOADER=avrdude
-
+LOADER   = avrdude
 ISP	:=-c usbasp 
-
 LOADER	:=$(LOADER) -p $(MCU) $(ISP)
 LOAD	:=$(LOADER) -i 5 -U flash:w:$(FIRMWARE).hex
 DUMP	:=$(LOADER) -i 5 -U flash:r:$(FIRMWARE).hex:i
@@ -100,7 +95,4 @@ clean :
 	@rm -f *.map *.bin *~ *.out *.gch *.o \
 		low.txt high.txt $(FIRMWARE) $(FIRMWARE).asm *hex *.s
 	@echo "done."
-
-archive: 
-	@tar cvzf ../../$(FIRMWARE).tgz ../../$(FIRMWARE)
 #EOF
