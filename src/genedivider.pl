@@ -24,7 +24,7 @@ EOH
 my $footer = <<EOF;
 
 	; Toggle output
-	; http:
+	; https://hackaday.com/2011/07/09/hardware-xor-for-output-pins-on-avr-microcontrollers/
 	ldi temp, 0xff              ; 1 cycle
 	out _SFR_IO_ADDR(PINB),temp ; 1 cycle
 	rjmp divider                ; 2 cycles
