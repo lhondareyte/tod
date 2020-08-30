@@ -10,6 +10,7 @@ int main (void) {
 	CLKMSR=0b00000010; // external clock
 	CLKPSR=0x00;       // no prescaler (1:1)
 #endif
+	DDRB=0xff;
 	divider();
 	return 0;
 }
