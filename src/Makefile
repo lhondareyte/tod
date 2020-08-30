@@ -92,7 +92,17 @@ wfuse:
 # Nettoyage, Archivage, etc.
 clean :
 	@printf "Cleaning source tree..."
-	@rm -f *.map *.bin *~ *.out *.gch *.o \
-		low.txt high.txt $(FIRMWARE) $(FIRMWARE).asm *hex *.s
+	@rm -f *.map \
+		*.bin \
+		*~ \
+		*.out \
+		*.gch \
+		*.o \
+		low.txt \
+		high.txt \
+		$(FIRMWARE) \
+		*.asm \
+		*hex \
+		*.s
 	@echo "done."
 #EOF
