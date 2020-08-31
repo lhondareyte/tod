@@ -1,5 +1,7 @@
 #!/usr/bin/env perl -w
 #
+# Copyright (c) 2020 Luc HONDAREYTE
+# All rights reserved.
 # Desc. : Assembly source code generator for one divider
 #
 

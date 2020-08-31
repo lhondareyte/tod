@@ -1,3 +1,7 @@
+/*
+   Copyright (c) 2018 Luc HONDAREYTE
+   All rights reserved.
+ */
 #include "top-octave.h"
 
 int main (void) {
