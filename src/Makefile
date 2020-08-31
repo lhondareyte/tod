@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018 Luc HONDAREYTE
+# Copyright (c)2018-2020 Luc HONDAREYTE
 # All rights reserved.
 #
 
@@ -28,7 +28,7 @@ asm-objs:
 	@$(foreach i,$(DIVIDERS),$(CC) $(ASMFLAGS) -c $(i).s -o $(i).o;)
 	@echo "done."
 hex-files: 
-	@printf "Generating $(FIRMWARE).hex..."
+	@printf "Generating hex files..."
 	@$(foreach i,$(DIVIDERS),$(OBJCOPY) -R .eeprom -O ihex $(i).out $(i).hex;) 
 	@echo "done."
 
