@@ -17,7 +17,7 @@ ASMFLAGS	+=-I /usr/local/avr/include
 
 DIVIDERS        = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
-all: top-octave.o asm-sources asm-objs out-files hex-files
+all: top-octave.o asm-sources asm-objs out-files hex-files clean
 
 asm-sources:
 	@printf "Generating ASM files ..."
@@ -93,7 +93,6 @@ wfuse:
 clean :
 	@printf "Cleaning source tree..."
 	@rm -f *.map \
-		*.bin \
 		*~ \
 		*.out \
 		*.gch \
@@ -102,7 +101,12 @@ clean :
 		high.txt \
 		$(FIRMWARE) \
 		*.asm \
-		*hex \
 		*.s
+	@echo "done."
+
+mrproper: clean
+	@printf "Cleaning source tree..."
+	@rm -f *.bin \
+		*.hex
 	@echo "done."
 #EOF
