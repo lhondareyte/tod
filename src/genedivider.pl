@@ -1,10 +1,11 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 #
 # Copyright (c) 2020 Luc HONDAREYTE
 # All rights reserved.
 # Desc. : Assembly source code generator for one divider
 #
 
+use warnings;
 use strict;
 my $offset  = 4;           # I/O cost 4 cycles in loop -> see @footer
 my $divider = shift ;
