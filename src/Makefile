@@ -10,8 +10,8 @@ OBJCOPY		:= avr-objcopy
 CFLAGS		+=-O0 -D F_CPU=$(HZ)
 CFLAGS		+=-g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 
-HEADERS         += $(wildcard *.h)
-SOURCES         += $(wildcard *.c)
+HEADERS         += $(shell ls *.h)
+SOURCES         += $(shell ls *.c)
 ASMFLAGS	:=-Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
 ASMFLAGS	+=-I /usr/local/avr/include
 
