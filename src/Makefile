@@ -5,51 +5,58 @@
 
 include config.mk
 
-CC		:= avr-gcc
-OBJCOPY		:= avr-objcopy
-CFLAGS		+=-O0 -D F_CPU=$(HZ)
-CFLAGS		+=-g -mmcu=$(MCU) -Wall -Wstrict-prototypes
+CC       = avr-gcc
+OBJCOPY  = avr-objcopy
+CFLAGS   = -O0 -D F_CPU=$(HZ)
+CFLAGS   += -g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 
-HEADERS         += $(shell ls *.h)
-SOURCES         += $(shell ls *.c)
-ASMFLAGS	:=-Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
-ASMFLAGS	+=-I /usr/local/avr/include
-
-DIVIDERS        = 478 451 426 402 379 358 338 319 301 284 268 253 239
+HEADERS  = top-octave.h
+SOURCES  = top-octave.c
+OBJECTS  = top-octave.o
+ASMFLAGS = -Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
+ASMFLAGS += -I /usr/local/avr/include
+DIVIDERS = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
 all: top-octave.o asm-sources asm-objs out-files hex-files clean
 
 asm-sources:
 	@printf "Generating ASM files ..."
-	@$(foreach i,$(DIVIDERS),./genedivider.pl $(i) > $(i).s;)
+	@for d in $(DIVIDERS);\
+               do ./genedivider.pl $$d > $$d.s; done
 	@echo "done."
 asm-objs:
 	@printf "Compiling dividers ..."
-	@$(foreach i,$(DIVIDERS),$(CC) $(ASMFLAGS) -c $(i).s -o $(i).o;)
+	@for d in $(DIVIDERS);\
+               do $(CC) $(ASMFLAGS) -c $$d.s -o $$d.o; done
 	@echo "done."
 hex-files: 
 	@printf "Generating hex files..."
-	@$(foreach i,$(DIVIDERS),$(OBJCOPY) -R .eeprom -O ihex $(i).out $(i).hex;) 
+	@for d in $(DIVIDERS);\
+               do $(OBJCOPY) -R .eeprom -O ihex $$d.out $$d.hex; done
 	@echo "done."
 
 out-files: 
-	@printf "Linking $(FIRMWARE)..."
-	@$(foreach i,$(DIVIDERS),$(CC) $(CFLAGS) -o $(i).out -Wl,-Map,$(i).map top-octave.o $(i).o;)
+	@printf "Linking dividers ..."
+	@for d in $(DIVIDERS);\
+               do $(CC) $(CFLAGS) -o $$d.out -Wl,-Map,$(i).map \
+               top-octave.o $$d.o; done
 	@echo "done."
 
-top-octave.c.o: 
+.c.o: 
 	@printf "Compiling  $<..."
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "done."
 
 asm: all
 	@printf "Generating assembler source file..."
-	@$(foreach i,$(DIVIDERS), avr-objdump -D -S $(i).out > $(i).asm;)
+	@for d in $(DIVIDERS); \
+                do avr-objdump -D -S $$d.out > $$d.asm; done
 	@echo "done."
 
 bin: all
 	@printf "Generating $(FIRMWARE).bin ..."
-	@$(foreach i,$(DIVIDERS), $(OBJCOPY) -R .eeprom -O binary $(i).out $(i).bin;)
+	@for d in $(DIVIDERS); \
+                do $(OBJCOPY) -R .eeprom -O binary $$d.out $$d.bin; done
 	@echo "done."
 #
 # Configuration du programmateur ISP
