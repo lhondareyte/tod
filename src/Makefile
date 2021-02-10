@@ -60,40 +60,38 @@ bin: all
 	@echo "done."
 #
 # Configuration du programmateur ISP
-LOADER   = avrdude
-ISP	:=-c usbasp 
-LOADER	:=$(LOADER) -p $(MCU) $(ISP)
-LOAD	:=$(LOADER) -i 5 -U flash:w:$(FIRMWARE).hex
-DUMP	:=$(LOADER) -i 5 -U flash:r:$(FIRMWARE).hex:i
-VERIFY	:=$(LOADER) -i 5 -U flash:v:$(FIRMWARE).hex
-ERASE	:=$(LOADER) -i 5 -e
-RFUSE	:=$(LOADER) -U lfuse:r:low.txt:b -U hfuse:r:high.txt:b
-WFUSE	:=$(LOADER) -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
+LOADER   = avrdude -p $(MCU)
+LOADER	+= -c usbasp 
+LOAD	 = -i 5 -U flash:w:$(FIRMWARE).hex
+DUMP	 = -i 5 -U flash:r:$(FIRMWARE).hex:i
+VERIFY	 = -i 5 -U flash:v:$(FIRMWARE).hex
+ERASE	 = -i 5 -e
+RFUSE	 = -U lfuse:r:low.txt:b -U hfuse:r:high.txt:b
+WFUSE	 = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
 
 load:
 	@printf "Loading firmware..."
-	@$(LOAD) > /dev/null 2>&1
+	@$(LOADER) $(LOAD) > /dev/null 2>&1
 	@echo "done."
 dump:
 	@printf "Reading $(MCU) device..."
-	@$(DUMP) > /dev/null 2>&1
+	@$(LOADER) $(DUMP) > /dev/null 2>&1
 	@echo "done."
 verify:
 	@printf "Verify $(MCU) device..."
-	@$(VERIFY) > /dev/null 2>&1
-	$(VERIFY) 
+	@$(LOADER) $(VERIFY) > /dev/null 2>&1
 	@echo "done."
 erase:
 	@printf "Erasing $(MCU) device..."
-	@$(ERASE) > /dev/null 2>&1
+	@$(LOADER) $(ERASE) > /dev/null 2>&1
 	@echo "done."
 rfuse:
 	@printf "Reading fuse..."
-	@$(RFUSE) > /dev/null 2>&1
+	@$(LOADER) $(RFUSE) > /dev/null 2>&1
 	@echo "done."
 wfuse:
 	@printf "Writing fuse..."
-	@$(WFUSE) > /dev/null 2>&1
+	@$(LOADER) $(WFUSE) > /dev/null 2>&1
 	@echo "done."
 #
 # Nettoyage, Archivage, etc.
@@ -113,7 +111,6 @@ clean :
 
 mrproper: clean
 	@printf "Cleaning source tree..."
-	@rm -f *.bin \
-		*.hex
+	@rm -f *.bin *.hex
 	@echo "done."
 #EOF
