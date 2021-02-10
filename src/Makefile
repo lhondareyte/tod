@@ -96,7 +96,7 @@ wfuse:
 #
 # Nettoyage, Archivage, etc.
 clean :
-	@printf "Cleaning source tree..."
+	@printf "Cleaning build files..."
 	@rm -f *.map \
 		*~ \
 		*.out \

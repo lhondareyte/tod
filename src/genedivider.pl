@@ -13,8 +13,9 @@ my $cost  = 5;               # I/O cost 4 cycles in loop -> see @footer
 my $loop = 20;               # wait loop = 20 cycles
 my $divider = shift ;
 my $counter = int(( $divider - $cost ) / $loop ) ;
-my $nop = $divider - ( $counter * $loop ) - $cost + 1 ; 
-#my $nop = $divider - ( $counter * 2 ) - $cost - 1 ; 
+my $padding = $divider - ( $counter * $loop ) - $cost + 1 ; 
+#my $debug = "TRUE";
+my $debug = "FALSE";
 
 if ( not defined $divider ) {
 	print "Usage : genedivider.pl <num> \n";
@@ -70,14 +71,17 @@ EOF
 
 print STDOUT "$header";
 
-#my $total = $nop + 5 + ($counter * 20);
-#print STDERR "Total cycles : $total - Padding : $nop \n";
+if ( $debug eq 'TRUE') {
+	my $total = $padding + 5 + ($counter * 20) - 1 ;
+	print STDERR "Total cycles : $total - Expected : $divider - Padding : $padding\n";
+}
+
 #
-# nop generation
-print STDOUT ("\t; nop padding ($nop nops)\n");
-while  ($nop) {
+# nop padding generation
+print STDOUT ("\t; nop padding ($padding nops)\n");
+while  ($padding) {
 	print STDOUT ("\tnop\n");
-	$nop = $nop - 1;
+	$padding = $padding - 1;
 }
 
 print STDOUT "$footer";
