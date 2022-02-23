@@ -47,7 +47,7 @@ out-files:
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "done."
 
-asm: all
+asm: top-octave.o asm-sources asm-objs out-files hex-files
 	@printf "Generating assembler source file..."
 	@for d in $(DIVIDERS); \
                 do avr-objdump -D -S $$d.out > $$d.asm; done
