@@ -72,7 +72,7 @@ EOF
 print STDOUT "$header";
 
 if ( $debug eq 'TRUE') {
-	my $total = $padding + 5 + ($counter * 20) - 1 ;
+	my $total = $padding + $cost + ($counter * 20) - 1 ;
 	print STDERR "Total cycles : $total - Expected : $divider - Padding : $padding\n";
 }
 
