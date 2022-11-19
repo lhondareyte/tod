@@ -17,18 +17,20 @@ ASMFLAGS = -Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
 ASMFLAGS += -I /usr/local/avr/include
 DIVIDERS = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
-all: top-octave.o asm-sources asm-objs out-files hex-files clean
+all: top-octave.o asm-sources asm-objs out-files hex-files bin-files 
 
 asm-sources:
 	@printf "Generating ASM files ..."
 	@for d in $(DIVIDERS);\
                do ./genedivider.pl $$d > $$d.s; done
 	@echo "done."
+
 asm-objs:
 	@printf "Compiling dividers ..."
 	@for d in $(DIVIDERS);\
                do $(CC) $(ASMFLAGS) -c $$d.s -o $$d.o; done
 	@echo "done."
+
 hex-files: 
 	@printf "Generating hex files..."
 	@for d in $(DIVIDERS);\
@@ -47,14 +49,14 @@ out-files:
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "done."
 
-asm: top-octave.o asm-sources asm-objs out-files hex-files
+asm: hex-files
 	@printf "Generating assembler source file..."
 	@for d in $(DIVIDERS); \
                 do avr-objdump -D -S $$d.out > $$d.asm; done
 	@echo "done."
 
-bin: all
-	@printf "Generating $(FIRMWARE).bin ..."
+bin-files: 
+	@printf "Generating bin files..."
 	@for d in $(DIVIDERS); \
                 do $(OBJCOPY) -R .eeprom -O binary $$d.out $$d.bin; done
 	@echo "done."
