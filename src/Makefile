@@ -3,8 +3,6 @@
 # All rights reserved.
 #
 
-include config.mk
-
 CC       = avr-gcc
 OBJCOPY  = avr-objcopy
 CFLAGS   = -O0 -D F_CPU=$(HZ)
@@ -18,6 +16,8 @@ ASMFLAGS += -I /usr/local/avr/include
 DIVIDERS = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
 all: top-octave.o asm-sources asm-objs out-files hex-files bin-files 
+
+include config.mk
 
 asm-sources:
 	@printf "Generating ASM files ..."
@@ -58,22 +58,14 @@ asm: hex-files
 bin-files: 
 	@printf "Generating bin files..."
 	@for d in $(DIVIDERS); \
-                do $(OBJCOPY) -R .eeprom -O binary $$d.out $$d.bin; done
+                do $(OBJCOPY) -R .eeprom -O binary ${OBJCOPY_OPTS} \
+                       $$d.out $$d.bin; done
 	@echo "done."
-#
-# Configuration du programmateur ISP
-LOADER   = avrdude -p $(MCU)
-LOADER	+= -c usbasp 
-LOAD	 = -i 5 -U flash:w:$(FIRMWARE).hex
-DUMP	 = -i 5 -U flash:r:$(FIRMWARE).hex:i
-VERIFY	 = -i 5 -U flash:v:$(FIRMWARE).hex
-ERASE	 = -i 5 -e
-RFUSE	 = -U lfuse:r:low.txt:b -U hfuse:r:high.txt:b
-WFUSE	 = -U lfuse:w:$(LFUSE):m -U hfuse:w:$(HFUSE):m
 
 load:
 	@printf "Loading firmware..."
-	@$(LOADER) $(LOAD) > /dev/null 2>&1
+	$(LOADER) $(LOAD) 
+	#@$(LOADER) $(LOAD) > /dev/null 2>&1
 	@echo "done."
 dump:
 	@printf "Reading $(MCU) device..."
@@ -87,26 +79,37 @@ erase:
 	@printf "Erasing $(MCU) device..."
 	@$(LOADER) $(ERASE) > /dev/null 2>&1
 	@echo "done."
+
+fuses.txt:
+	@echo "fuses_lo = $(LFUSE)"  > $@
+	@echo "fuses_hi = $(HFUSE)" >> $@
+	@echo "lock_byte = 0xff"    >> $@
+
 rfuse:
 	@printf "Reading fuse..."
 	@$(LOADER) $(RFUSE) > /dev/null 2>&1
 	@echo "done."
-wfuse:
+
+wfuse: fuses.txt
 	@printf "Writing fuse..."
-	@$(LOADER) $(WFUSE) > /dev/null 2>&1
+	#@$(LOADER) $(WFUSE) > /dev/null 2>&1
+	$(LOADER) $(WFUSE)
 	@echo "done."
 #
 # Nettoyage, Archivage, etc.
 clean :
 	@printf "Cleaning build files..."
 	@rm -f *.map \
+		.map \
 		*~ \
 		*.out \
 		*.gch \
 		*.o \
+		fuses.txt \
+		fuses.TXT \
+		$(FIRMWARE) \
 		low.txt \
 		high.txt \
-		$(FIRMWARE) \
 		*.asm \
 		*.s
 	@echo "done."
