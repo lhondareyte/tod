@@ -6,7 +6,7 @@ HZ	= 8000000 # To avoid warning only
 LFUSE	= 0x78
 HFUSE	= 0xff
 
-MODEL        = ATTINY13
+MODEL        = ATTINY13A
 LOAD         = minipro -P -w $(FIRMWARE).bin -c code -p $(MODEL)
 RFUSE        = minipro -r fuses.TXT -c config -p $(MODEL)
 WFUSE        = minipro -w fuses.txt -c config -p $(MODEL)
