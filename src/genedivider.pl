@@ -1,87 +1,119 @@
 #!/usr/bin/env perl
 #
-# Copyright (c) 2020 Luc HONDAREYTE
-# All rights reserved.
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2020-2024 Luc HONDAREYTE
+# 
 # Desc. : Assembly source code generator for one divider
 #
 
 use warnings;
 use strict;
-my $cost  = 5;               # I/O cost 4 cycles in loop -> see @footer
-                             # ldi cost 1 cycle
-
-my $loop = 20;               # wait loop = 20 cycles
+my $loop = 4;               # wait loop duration in cycles
+my $io_cost = 3;             # 2 cycles to toggle pins  + final rjmp
 my $divider = shift ;
-my $counter = int(( $divider - $cost ) / $loop ) ;
-my $padding = $divider - ( $counter * $loop ) - $cost + 1 ; 
-#my $debug = "TRUE";
+my $_div = $divider ;        # Demi period
+my $counter;
+my $padding;
 my $debug = "FALSE";
+my $parity = "TRUE";
+my $n = 0;
+my $t = 0;
+my $total = 0;
 
-if ( not defined $divider ) {
-	print "Usage : genedivider.pl <num> \n";
-	exit 1;
-}
-
-my $header   = <<EOH;
+my $Header = <<EOH;
+;
+; Generated Assembly code, do not edit!
+;
 #include <avr/io.h>
 #define temp r17
 #define counter r16
 .global divider
 
 divider:
-	; 1 cycle
-	ldi counter, $counter 
-
-wait:
-	; counter x 20 cycles
-	nop
-	nop
-	nop
-	nop
-	nop
-
-	nop
-	nop
-	nop
-	nop
-	nop
-
-	nop
-	nop
-	nop
-	nop
-	nop
-
-	nop
-	nop
-	dec counter          
-	brne wait
 
 EOH
 
-my $footer = <<EOF;
+my $Toggle = <<EOF;
 
 	; Toggle output
 	; https://hackaday.com/2011/07/09/hardware-xor-for-output-pins-on-avr-microcontrollers/
 	ldi temp, 0xff              ; 1 cycle
 	out _SFR_IO_ADDR(PINB),temp ; 1 cycle
-	rjmp divider                ; 2 cycles
 
 EOF
 
-print STDOUT "$header";
+if ( not defined $divider ) {
+	print "Usage : genedivider.pl <num> \n";
+	exit 1;
+}
 
-if ( $debug eq 'TRUE') {
-	my $total = $padding + $cost + ($counter * 20) - 1 ;
-	print STDERR "Total cycles : $total - Expected : $divider - Padding : $padding\n";
+if ( $divider % 2 ) {
+	$parity = "FALSE";
+}
+
+$_div = int( $divider / 2 );
+$counter = int( $_div / $loop );
+
+# Prevent padding underflow
+$counter--;            
+
+if ( $loop <= $io_cost ) {
+	die "Error : loop variable is too low\n";
+}
+
+if ( $_div > 255 ) {
+	die "Error : counter overflow ($counter).\n";
+}
+
+$padding = ($_div - ( $counter * $loop )) - $io_cost; 
+
+if ( $padding < 0 ) {
+	die "Error : padding underflow ($padding) .\n";
 }
 
 #
-# nop padding generation
-print STDOUT ("\t; nop padding ($padding nops)\n");
-while  ($padding) {
-	print STDOUT ("\tnop\n");
-	$padding = $padding - 1;
+# Wait loop generation
+#
+sub WaitGeneration {
+	my $adjust = shift;
+	my $l = $loop;
+	my $p = $padding;
+	if ( defined $adjust ) { 
+		$p = $p - $adjust;
+	}
+	print STDOUT "\tldi counter, $counter\n";
+	print STDOUT "wait_$n:\n\t;counter x $loop cycles\n";
+	$l = $l - $io_cost;
+	while ( $l ) {
+		print STDOUT "\tnop\n";
+		$l--;
+	}
+	print STDOUT "\n\tdec counter\n\tbrne wait_$n\n\n";
+	#
+	# nop padding generation
+	print STDOUT ("\t; Padding ($p nops)\n");
+	while  ( $p ) {
+		print STDOUT ("\tnop\n");
+		$p--;
+	}
+	$n++;
 }
 
-print STDOUT "$footer";
+if ( $debug eq 'TRUE') {
+	$total = (( $counter * $loop ) + $padding + $io_cost ) * 2 ;
+	if ( $parity eq 'FALSE' ) {
+		$total++;
+	}
+	print STDERR "\nTotal cycles : $total - Expected : $divider";
+}
+
+print STDOUT "$Header";
+WaitGeneration();
+print STDOUT "$Toggle";
+WaitGeneration(1);
+if ( $parity eq "FALSE" ) {
+	print STDOUT "\n\t; fix parity\n\tnop\n";
+}
+print STDOUT "$Toggle";
+print STDOUT "\n\trjmp divider                ; 2 cycles\n";
