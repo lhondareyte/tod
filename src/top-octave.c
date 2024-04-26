@@ -1,6 +1,8 @@
 /*
-   Copyright (c) 2018 Luc HONDAREYTE
-   All rights reserved.
+ * SPDX-License-Identifier: MIT
+ *
+ * Copyright (c) 2018-2024 Luc HONDAREYTE
+ *
  */
 #include "top-octave.h"
 
