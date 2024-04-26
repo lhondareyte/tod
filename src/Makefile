@@ -1,5 +1,5 @@
 #
-# Copyright (c)2018-2020 Luc HONDAREYTE
+# Copyright (c)2018-2024 Luc HONDAREYTE
 # All rights reserved.
 #
 
@@ -10,25 +10,25 @@ CFLAGS   += -g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 
 HEADERS  = top-octave.h
 SOURCES  = top-octave.c
-OBJECTS  = top-octave.o
+OBJECTS  = top-octave.o setextclk.o
 ASMFLAGS = -Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
 ASMFLAGS += -I /usr/local/avr/include
 DIVIDERS = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
-all: top-octave.o asm-sources asm-objs out-files hex-files bin-files 
+all: ${OBJECTS} asm-sources asm-objs out-files hex-files bin-files 
 
 include config.mk
 
 asm-sources:
 	@printf "Generating ASM files ..."
 	@for d in $(DIVIDERS);\
-               do ./genedivider.pl $$d > $$d.s; done
+               do ./genedivider.pl $$d > $$d.S; done
 	@echo "done."
 
 asm-objs:
 	@printf "Compiling dividers ..."
 	@for d in $(DIVIDERS);\
-               do $(CC) $(ASMFLAGS) -c $$d.s -o $$d.o; done
+               do $(CC) $(ASMFLAGS) -c $$d.S -o $$d.o; done
 	@echo "done."
 
 hex-files: 
@@ -41,12 +41,17 @@ out-files:
 	@printf "Linking dividers ..."
 	@for d in $(DIVIDERS);\
                do $(CC) $(CFLAGS) -o $$d.out -Wl,-Map,$(i).map \
-               top-octave.o $$d.o; done
+               ${OBJECTS} $$d.o; done
 	@echo "done."
 
 .c.o: 
 	@printf "Compiling  $<..."
 	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "done."
+
+.s.o: $(HEADERS) $(ASMSRCS)
+	@printf "Compiling  $<..."
+	@$(CC) $(ASMFLAGS) -c $< -o $@
 	@echo "done."
 
 asm: hex-files
@@ -111,7 +116,7 @@ clean :
 		low.txt \
 		high.txt \
 		*.asm \
-		*.s
+		*.S
 	@echo "done."
 
 mrproper: clean

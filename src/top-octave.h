@@ -3,3 +3,7 @@
 #include <stdint.h>
 
 void divider(void);
+
+#if defined __AVR_ATtiny4__
+extern void setExtClk(void);
+#endif
