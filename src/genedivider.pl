@@ -23,7 +23,11 @@ my $total = 0;
 
 my $Header = <<EOH;
 ;
-; Generated Assembly code, do not edit!
+; Automatically generated assembly code, do not edit
+;
+; SPDX-License-Identifier: MIT
+;
+; Divider by $divider
 ;
 #include <avr/io.h>
 #define temp r17
@@ -76,12 +80,8 @@ if ( $padding < 0 ) {
 # Wait loop generation
 #
 sub WaitGeneration {
-	my $adjust = shift;
 	my $l = $loop;
 	my $p = $padding;
-	if ( defined $adjust ) { 
-		$p = $p - $adjust;
-	}
 	print STDOUT "\tldi counter, $counter\n";
 	print STDOUT "wait_$n:\n\t;counter x $loop cycles\n";
 	$l = $l - $io_cost;
@@ -111,7 +111,7 @@ if ( $debug eq 'TRUE') {
 print STDOUT "$Header";
 WaitGeneration();
 print STDOUT "$Toggle";
-WaitGeneration(1);
+WaitGeneration();
 if ( $parity eq "FALSE" ) {
 	print STDOUT "\n\t; fix parity\n\tnop\n";
 }
