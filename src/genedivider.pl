@@ -66,7 +66,7 @@ if ( $loop <= $io_cost ) {
 	die "Error : loop variable is too low\n";
 }
 
-if ( $_div > 255 ) {
+if ( $counter > 255 ) {
 	die "Error : counter overflow ($counter).\n";
 }
 
