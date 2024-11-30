@@ -11,7 +11,7 @@ CFLAGS   += -g -mmcu=$(MCU) -Wall -Wstrict-prototypes
 HEADERS  = top-octave.h
 SOURCES  = top-octave.c
 OBJECTS  = top-octave.o setextclk.o
-ASMFLAGS = -Os -mmcu=$(MCU) -x assembler-with-cpp -gstabs
+ASMFLAGS = -Os -mmcu=$(MCU) -x assembler-with-cpp 
 ASMFLAGS += -I /usr/local/avr/include
 DIVIDERS = 478 451 426 402 379 358 338 319 301 284 268 253 239
 
