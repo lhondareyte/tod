@@ -9,17 +9,27 @@
 
 use warnings;
 use strict;
-my $loop = 4;               # wait loop duration in cycles
+my $d_loop = 4;              # default wait loop duration in cycles
 my $io_cost = 3;             # 2 cycles to toggle pins  + final rjmp
+
 my $divider = shift ;
+my $loop = shift ;
+
 my $_div = $divider ;        # Demi period
 my $counter;
 my $padding;
 my $debug = "FALSE";
 my $parity = "TRUE";
-my $n = 0;
 my $t = 0;
 my $total = 0;
+
+if ( not defined $divider ) {
+	die "Usage : genedivider.pl <count> [loop]\n";
+}
+
+if ( not defined $loop ) {
+	$loop = $d_loop;
+}
 
 my $Header = <<EOH;
 ;
@@ -47,10 +57,6 @@ my $Toggle = <<EOF;
 
 EOF
 
-if ( not defined $divider ) {
-	print "Usage : genedivider.pl <num> \n";
-	exit 1;
-}
 
 if ( $divider % 2 ) {
 	$parity = "FALSE";
@@ -58,6 +64,10 @@ if ( $divider % 2 ) {
 
 $_div = int( $divider / 2 );
 $counter = int( $_div / $loop );
+
+if ( $counter < 2 ) {
+	die "Error : counter underflow.\n";
+}
 
 # Prevent padding underflow
 $counter--;            
@@ -82,14 +92,12 @@ if ( $padding < 0 ) {
 sub WaitGeneration {
 	my $l = $loop;
 	my $p = $padding;
-	print STDOUT "\tldi counter, $counter\n";
-	print STDOUT "wait_$n:\n\t;counter x $loop cycles\n";
 	$l = $l - $io_cost;
 	while ( $l ) {
 		print STDOUT "\tnop\n";
 		$l--;
 	}
-	print STDOUT "\n\tdec counter\n\tbrne wait_$n\n\n";
+	print STDOUT "\n\tdec counter\n\tbrne loop_0\n\n";
 	#
 	# nop padding generation
 	print STDOUT ("\t; Padding ($p nops)\n");
@@ -97,7 +105,6 @@ sub WaitGeneration {
 		print STDOUT ("\tnop\n");
 		$p--;
 	}
-	$n++;
 }
 
 if ( $debug eq 'TRUE') {
@@ -109,11 +116,12 @@ if ( $debug eq 'TRUE') {
 }
 
 print STDOUT "$Header";
+print STDOUT "\tldi counter, $counter\n";
+print STDOUT "loop_0:\n\t;counter x $loop cycles\n";
 WaitGeneration();
 print STDOUT "$Toggle";
-WaitGeneration();
+print STDOUT "\tldi counter, $counter\n";
 if ( $parity eq "FALSE" ) {
 	print STDOUT "\n\t; fix parity\n\tnop\n";
 }
-print STDOUT "$Toggle";
-print STDOUT "\n\trjmp divider                ; 2 cycles\n";
+print STDOUT "\n\trjmp loop_0                ; 2 cycles\n";
