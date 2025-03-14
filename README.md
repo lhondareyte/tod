@@ -26,3 +26,15 @@ Original MOSTEK chips sink 24mA@15V : 0.36w Typ. (Max 37mA@15V = 0.56W). You nee
 
 * Support 30% duty cycle
 
+## Other use
+
+The script `genedivider.pl` can be use to generate assembly code for any static prescaler. For example, to build a `by 42` prescaler:
+
+    ./genedivide.pl 42 > divide.S
+
+
+If an overflow/underflow occurs you can try to adjust `$loop` variable:
+
+    ./genedivide.pl 10000 200 > divide.S
+
+Warning, the script do not check the generated code size.
