@@ -19,7 +19,7 @@ my $_div = $divider ;        # Demi period
 my $counter;
 my $padding;
 my $debug = "FALSE";
-my $parity = "TRUE";
+my $even = "TRUE";
 my $t = 0;
 my $total = 0;
 
@@ -59,7 +59,7 @@ EOF
 
 
 if ( $divider % 2 ) {
-	$parity = "FALSE";
+	$even = "FALSE";
 }
 
 $_div = int( $divider / 2 );
@@ -109,7 +109,7 @@ sub WaitGeneration {
 
 if ( $debug eq 'TRUE') {
 	$total = (( $counter * $loop ) + $padding + $io_cost ) * 2 ;
-	if ( $parity eq 'FALSE' ) {
+	if ( $even eq 'FALSE' ) {
 		$total++;
 	}
 	print STDERR "\nTotal cycles : $total - Expected : $divider";
@@ -121,7 +121,7 @@ print STDOUT "loop_0:\n\t;counter x $loop cycles\n";
 WaitGeneration();
 print STDOUT "$Toggle";
 print STDOUT "\tldi counter, $counter\n";
-if ( $parity eq "FALSE" ) {
-	print STDOUT "\n\t; fix parity\n\tnop\n";
+if ( $even eq "FALSE" ) {
+	print STDOUT "\n\t; fix odd number\n\tnop\n";
 }
 print STDOUT "\n\trjmp loop_0                ; 2 cycles\n";
