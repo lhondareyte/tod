@@ -67,41 +67,6 @@ bin-files:
                        $$d.out $$d.bin; done
 	@echo "done."
 
-load:
-	@printf "Loading firmware..."
-	$(LOADER) $(LOAD) 
-	#@$(LOADER) $(LOAD) > /dev/null 2>&1
-	@echo "done."
-dump:
-	@printf "Reading $(MCU) device..."
-	@$(LOADER) $(DUMP) > /dev/null 2>&1
-	@echo "done."
-verify:
-	@printf "Verify $(MCU) device..."
-	@$(LOADER) $(VERIFY) > /dev/null 2>&1
-	@echo "done."
-erase:
-	@printf "Erasing $(MCU) device..."
-	@$(LOADER) $(ERASE) > /dev/null 2>&1
-	@echo "done."
-
-fuses.txt:
-	@echo "fuses_lo = $(LFUSE)"  > $@
-	@echo "fuses_hi = $(HFUSE)" >> $@
-	@echo "lock_byte = 0xff"    >> $@
-
-rfuse:
-	@printf "Reading fuse..."
-	@$(LOADER) $(RFUSE) > /dev/null 2>&1
-	@echo "done."
-
-wfuse: fuses.txt
-	@printf "Writing fuse..."
-	#@$(LOADER) $(WFUSE) > /dev/null 2>&1
-	$(LOADER) $(WFUSE)
-	@echo "done."
-#
-# Nettoyage, Archivage, etc.
 clean :
 	@printf "Cleaning build files..."
 	@rm -f *.map \
