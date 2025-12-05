@@ -30,11 +30,33 @@ Original MOSTEK chips sink 24mA@15V : 0.36w Typ. (Max 37mA@15V = 0.56W). You nee
 
 The script `genedivider.pl` can be use to generate assembly code for any static prescaler. For example, to build a `by 42` prescaler:
 
-    ./genedivide.pl 42 > divide.S
+    ./genedivider.pl 42 > divide.S
 
 
 If an overflow/underflow occurs you can try to adjust `$loop` variable:
 
-    ./genedivide.pl 10000 200 > divide.S
+    ./genedivider.pl 10000 200 > divide.S
 
 Warning, the script do not check the generated code size.
+
+## Programming the attiny4
+
+The ATtiny4 require a programmer that is compatible with the TPI mode (Tiny Programming Interface). 
+
+To flash one divider with `avrdude`,  connect the attiny to the programmer as follow:
+
+     USBASP               ATTINY
+       +5v <-------------> +5v     (pin 5)
+       gnd <-------------> gnd     (pin 2)
+     reset <-------------> reset   (pin 6)
+      MOSI <-------------> TPIDATA (pin 1)
+       CLK <-------------> TPICLK  (pin 3)
+
+then
+
+    avrdude -c usbasp -p t4 -U flash:w:437.hex
+
+and apply fuse configuration
+
+    avrdude -c usbasp -p t4 -U BYTE0:w:0xfa:m
+
